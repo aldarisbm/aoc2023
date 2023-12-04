@@ -6,16 +6,19 @@ import (
 	"strings"
 )
 
-const nums = "1234567890"
+const numbers = "1234567890"
 
 func dayThreePartOne() {
 	data := loadData("three")
-	sum := getSum(data)
+	sum := getSumDayOne(data)
 
 	fmt.Printf("Day Three Part One Result: %d\n", sum)
 }
 
 func dayThreePartTwo() {
+	data := loadData("three")
+	sum := getSumDayTwo(data)
+	fmt.Printf("Day Three Part Two Result: %d\n", sum)
 }
 
 type MatrixIndex struct {
@@ -32,7 +35,7 @@ func NewMatrixSymbolIndex(height, width int, data string) *MatrixIndex {
 	dot := "."
 	for i, l := range strings.Split(data, "\n") {
 		for j, char := range l {
-			if !strings.Contains(nums, string(char)) && string(char) != dot {
+			if !strings.Contains(numbers, string(char)) && string(char) != dot {
 				mi.Data[i][j] = 1
 			}
 		}
@@ -41,20 +44,79 @@ func NewMatrixSymbolIndex(height, width int, data string) *MatrixIndex {
 	return &mi
 }
 
-func getSum(data string) int {
+func getSumDayOne(data string) int {
 	smi := NewMatrixSymbolIndex(140, 140, data)
 	sum := 0
 
 	for i, l := range strings.Split(data, "\n") {
-		for j := 0; j < len(l); j++ {
-			if strings.Contains(nums, string(l[j])) {
+		for j := 0; j < len(l); {
+			if strings.Contains(numbers, string(l[j])) {
 				num := processNumber(l[j:])
 				lenOfNum := len(strconv.Itoa(num))
 				if isNumSurroundedBySymbol(i, j, num, smi) {
-					fmt.Printf("found number surrounded: %d, at: %d, %d\n", num, i, j)
 					sum += num
 				}
 				j = j + lenOfNum // starting j at the end of the number
+			} else {
+				j++
+			}
+		}
+	}
+	return sum
+}
+
+func getSumDayTwo(data string) int {
+
+	intID := make(map[int]int)
+	id := 0
+
+	sum := 0
+	m := make([][]map[string]int, 140)
+	for i := 0; i < 140; i++ {
+		m[i] = make([]map[string]int, 140)
+	}
+
+	mn := make([][]string, 140)
+	for i := 0; i < 140; i++ {
+		mn[i] = make([]string, 140)
+	}
+	for idx, l := range strings.Split(data, "\n") {
+		for j, c := range l {
+			mn[idx][j] = string(c)
+		}
+	}
+
+	for idx, l := range strings.Split(data, "\n") {
+		for j := 0; j < len(l); {
+			if strings.Contains(numbers, string(l[j])) {
+				num := processNumber(l[j:])
+				lenOfNum := len(strconv.Itoa(num))
+				for x := j; x < j+lenOfNum; x++ {
+					if m[idx][x] == nil {
+						m[idx][x] = make(map[string]int)
+					}
+					m[idx][x][string(l[x])] = id
+				}
+				intID[id] = num
+				id++
+				j += lenOfNum
+			} else {
+				if m[idx][j] == nil {
+					m[idx][j] = make(map[string]int)
+				}
+				m[idx][j] = map[string]int{string(l[j]): -1}
+				j++
+			}
+		}
+	}
+
+	for i, l := range strings.Split(data, "\n") {
+		for j := 0; j < len(l); j++ {
+			if string(l[j]) == "*" {
+				gearRatio := getSurroundingNumbers(i, j, m, mn, intID)
+				if gearRatio != -1 {
+					sum += gearRatio
+				}
 			}
 		}
 	}
@@ -63,7 +125,7 @@ func getSum(data string) int {
 
 func processNumber(s string) int {
 	for idx, c := range s {
-		if !strings.Contains(nums, string(c)) {
+		if !strings.Contains(numbers, string(c)) {
 			parsed, _ := strconv.ParseInt(s[:idx], 10, 64)
 			n := int(parsed)
 			return n
@@ -78,9 +140,6 @@ func processNumber(s string) int {
 }
 
 func isNumSurroundedBySymbol(i, j, num int, symbolMatrix *MatrixIndex) bool {
-	if num == 712 {
-		fmt.Println()
-	}
 	lenOfNum := len(strconv.Itoa(num))
 	for currIdx := j; currIdx < j+lenOfNum; currIdx++ {
 		if isCharSurroundedBySymbol(i, currIdx, symbolMatrix) {
@@ -88,6 +147,89 @@ func isNumSurroundedBySymbol(i, j, num int, symbolMatrix *MatrixIndex) bool {
 		}
 	}
 	return false
+}
+
+func getSurroundingNumbers(i, j int, m [][]map[string]int, mn [][]string, ids map[int]int) int {
+	found := make(map[int]bool)
+	var numbers []int
+
+	// check left
+	if j != 0 {
+		s := mn[i][j-1]
+		_, ok := found[m[i][j-1][s]]
+		if m[i][j-1][s] != -1 && !ok {
+			found[m[i][j-1][s]] = true
+			numbers = append(numbers, ids[m[i][j-1][s]])
+		}
+	}
+	// check right
+	if j != 139 {
+		s := mn[i][j+1]
+		_, ok := found[m[i][j+1][s]]
+		if m[i][j+1][s] != -1 && !ok {
+			found[m[i][j+1][s]] = true
+			numbers = append(numbers, ids[m[i][j+1][s]])
+		}
+	}
+	// check above
+	if i != 0 {
+		s := mn[i-1][j]
+		_, ok := found[m[i-1][j][s]]
+		if m[i-1][j][s] != -1 && !ok {
+			found[m[i-1][j][s]] = true
+			numbers = append(numbers, ids[m[i-1][j][s]])
+		}
+	}
+	// check below
+	if i != 139 {
+		s := mn[i+1][j]
+		_, ok := found[m[i+1][j][s]]
+		if m[i+1][j][s] != -1 && !ok {
+			found[m[i+1][j][s]] = true
+			numbers = append(numbers, ids[m[i+1][j][s]])
+		}
+	}
+	// check top left
+	if i != 0 && j != 0 {
+		s := mn[i-1][j-1]
+		_, ok := found[m[i-1][j-1][s]]
+		if m[i-1][j-1][s] != -1 && !ok {
+			found[m[i-1][j-1][s]] = true
+			numbers = append(numbers, ids[m[i-1][j-1][s]])
+		}
+	}
+	// check top right
+	if i != 0 && j != 139 {
+		s := mn[i-1][j+1]
+		_, ok := found[m[i-1][j+1][s]]
+		if m[i-1][j+1][s] != -1 && !ok {
+			found[m[i-1][j+1][s]] = true
+			numbers = append(numbers, ids[m[i-1][j+1][s]])
+		}
+	}
+	// check bottom left
+	if i != 139 && j != 0 {
+		s := mn[i+1][j-1]
+		_, ok := found[m[i+1][j-1][s]]
+		if m[i+1][j-1][s] != -1 && !ok {
+			found[m[i+1][j-1][s]] = true
+			numbers = append(numbers, ids[m[i+1][j-1][s]])
+		}
+	}
+	// check bottom right
+	if i != 139 && j != 139 {
+		s := mn[i+1][j+1]
+		_, ok := found[m[i+1][j+1][s]]
+		if m[i+1][j+1][s] != -1 && !ok {
+			found[m[i+1][j+1][s]] = true
+			numbers = append(numbers, ids[m[i+1][j+1][s]])
+		}
+	}
+
+	if len(numbers) == 2 {
+		return numbers[0] * numbers[1]
+	}
+	return -1
 }
 
 func isCharSurroundedBySymbol(i, j int, symbolMatrix *MatrixIndex) bool {
