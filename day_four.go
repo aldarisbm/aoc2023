@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type Card struct {
-	cardNumber     int
+	number         int
 	winningNumbers []int
 	currentNumbers []int
 	matches        int
@@ -28,23 +29,46 @@ func dayFourPartOne() {
 
 func dayFourPartTwo() {
 	data := loadData("four")
-	var allCards []Card
+	var allCards []*Card
+	var sum int
+	m := sync.Mutex{}
+
 	for i, l := range strings.Split(data, "\n") {
 		s := strings.Split(l, fmt.Sprintf("%d: ", i+1))
 		s = strings.Split(s[1], " | ")
 		winningNumbers := processNumbers(s[0])
 		myNumbers := processNumbers(s[1])
-		matches := getRealPoints(winningNumbers, myNumbers)
-		allCards = append(allCards, Card{i + 1, winningNumbers, myNumbers, matches})
+		matches := getMatches(winningNumbers, myNumbers)
+		allCards = append(allCards, &Card{i + 1, winningNumbers, myNumbers, matches})
 	}
-	fmt.Printf("%+v\n", allCards)
+
+	processCards(allCards, allCards, &sum, &m)
+
+	fmt.Printf("Day Four Part Two: %d\n", sum)
 }
 
-func getRealPoints(w, m []int) int {
+func processCards(allCards []*Card, cardsToProcess []*Card, sum *int, m *sync.Mutex) {
+	if len(cardsToProcess) == 0 {
+		return
+	}
+	var extraCardsToProcess []*Card
+
+	for _, card := range cardsToProcess {
+		if card.matches > 0 {
+			for i := 0; i < card.matches; i++ {
+				*sum++
+				extraCardsToProcess = append(extraCardsToProcess, allCards[card.number+i])
+			}
+		}
+	}
+	processCards(allCards, extraCardsToProcess, sum, m)
+}
+
+func getMatches(w, m []int) int {
 	points := 0
 	for _, v := range m {
 		if intInSlice(v, w) {
-			points *= 2
+			points++
 		}
 	}
 	return points
