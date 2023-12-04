@@ -12,4 +12,7 @@ func main() {
 	// Day Three
 	dayThreePartOne()
 	dayThreePartTwo()
+
+	// Day Four
+	dayFourPartOne()
 }
