@@ -113,7 +113,7 @@ func getSumDayTwo(data string) int {
 	for i, l := range strings.Split(data, "\n") {
 		for j := 0; j < len(l); j++ {
 			if string(l[j]) == "*" {
-				gearRatio := getSurroundingNumbers(i, j, m, mn, intID)
+				gearRatio := getGearRatio(i, j, m, mn, intID)
 				if gearRatio != -1 {
 					sum += gearRatio
 				}
@@ -149,7 +149,7 @@ func isNumSurroundedBySymbol(i, j, num int, symbolMatrix *MatrixIndex) bool {
 	return false
 }
 
-func getSurroundingNumbers(i, j int, m [][]map[string]int, mn [][]string, ids map[int]int) int {
+func getGearRatio(i, j int, m [][]map[string]int, mn [][]string, ids map[int]int) int {
 	found := make(map[int]bool)
 	var numbers []int
 
