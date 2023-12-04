@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+type Card struct {
+	cardNumber     int
+	winningNumbers []int
+	currentNumbers []int
+	matches        int
+}
+
 func dayFourPartOne() {
 	data := loadData("four")
 	sum := 0
@@ -20,7 +27,27 @@ func dayFourPartOne() {
 }
 
 func dayFourPartTwo() {
-	fmt.Printf("Day Four Part One: %d\n", 0)
+	data := loadData("four")
+	var allCards []Card
+	for i, l := range strings.Split(data, "\n") {
+		s := strings.Split(l, fmt.Sprintf("%d: ", i+1))
+		s = strings.Split(s[1], " | ")
+		winningNumbers := processNumbers(s[0])
+		myNumbers := processNumbers(s[1])
+		matches := getRealPoints(winningNumbers, myNumbers)
+		allCards = append(allCards, Card{i + 1, winningNumbers, myNumbers, matches})
+	}
+	fmt.Printf("%+v\n", allCards)
+}
+
+func getRealPoints(w, m []int) int {
+	points := 0
+	for _, v := range m {
+		if intInSlice(v, w) {
+			points *= 2
+		}
+	}
+	return points
 }
 
 func processNumbers(s string) []int {
