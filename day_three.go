@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const numbers = "1234567890"
+const nums = "1234567890"
 
 func dayThreePartOne() {
 	data := loadData("three")
@@ -35,7 +35,7 @@ func NewMatrixSymbolIndex(height, width int, data string) *MatrixIndex {
 	dot := "."
 	for i, l := range strings.Split(data, "\n") {
 		for j, char := range l {
-			if !strings.Contains(numbers, string(char)) && string(char) != dot {
+			if !strings.Contains(nums, string(char)) && string(char) != dot {
 				mi.Data[i][j] = 1
 			}
 		}
@@ -50,7 +50,7 @@ func getSumDayOne(data string) int {
 
 	for i, l := range strings.Split(data, "\n") {
 		for j := 0; j < len(l); {
-			if strings.Contains(numbers, string(l[j])) {
+			if strings.Contains(nums, string(l[j])) {
 				num := processNumber(l[j:])
 				lenOfNum := len(strconv.Itoa(num))
 				if isNumSurroundedBySymbol(i, j, num, smi) {
@@ -88,7 +88,7 @@ func getSumDayTwo(data string) int {
 
 	for idx, l := range strings.Split(data, "\n") {
 		for j := 0; j < len(l); {
-			if strings.Contains(numbers, string(l[j])) {
+			if strings.Contains(nums, string(l[j])) {
 				num := processNumber(l[j:])
 				lenOfNum := len(strconv.Itoa(num))
 				for x := j; x < j+lenOfNum; x++ {
@@ -125,7 +125,7 @@ func getSumDayTwo(data string) int {
 
 func processNumber(s string) int {
 	for idx, c := range s {
-		if !strings.Contains(numbers, string(c)) {
+		if !strings.Contains(nums, string(c)) {
 			parsed, _ := strconv.ParseInt(s[:idx], 10, 64)
 			n := int(parsed)
 			return n
