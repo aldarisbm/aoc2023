@@ -16,4 +16,7 @@ func main() {
 	// Day Four
 	dayFourPartOne()
 	dayFourPartTwo()
+
+	// Day Five
+	dayFivePartOne()
 }
