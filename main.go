@@ -2,21 +2,22 @@ package main
 
 func main() {
 	// Day One
-	dayOnePartOne()
-	dayOnePartTwo()
+	//dayOnePartOne()
+	//dayOnePartTwo()
 
 	// Day Two
-	dayTwoPartOne()
-	dayTwoPartTwo()
+	//dayTwoPartOne()
+	//dayTwoPartTwo()
 
 	// Day Three
-	dayThreePartOne()
-	dayThreePartTwo()
+	//dayThreePartOne()
+	//dayThreePartTwo()
 
 	// Day Four
-	dayFourPartOne()
-	dayFourPartTwo()
+	//dayFourPartOne()
+	//dayFourPartTwo()
 
 	// Day Five
-	dayFivePartOne()
+	//dayFivePartOne()
+	//dayFivePartTwo()
 }
