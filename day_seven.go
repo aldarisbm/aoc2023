@@ -21,7 +21,7 @@ const (
 
 func daySevenPartOne() {
 	data := loadData("seven")
-	games := getGames(data)
+	games := getGames(data, false)
 	sort.Sort(ByGame(games))
 	sum := 0
 	for i, g := range games {
@@ -29,14 +29,119 @@ func daySevenPartOne() {
 		sum += g.Bid * rank
 	}
 
+	// QC
+	if sum != 249638405 {
+		panic("wrong sum")
+	}
 	fmt.Printf("Day Seven Part One: %d\n", sum)
+}
+
+func daySevenPartTwo() {
+	data := loadData("seven")
+	games := getGames(data, true)
+	sort.Sort(ByGame(games))
+
+	fmt.Printf("Day Seven Part Two: %d\n", 0)
 }
 
 type Game struct {
 	Bid     int
-	Hand    string
 	Kind    Kind
 	HandInt []int
+}
+
+func NewGame(bid int, hand string, specialJoker bool) Game {
+	ogHand := hand
+	if specialJoker {
+		hand = processHand(hand)
+	}
+	kind := getKind(hand)
+
+	return Game{
+		Bid:     bid,
+		Kind:    kind,
+		HandInt: handToIntSlice(ogHand, specialJoker),
+	}
+}
+
+func processHand(hand string) string {
+	k := getKind(hand)
+	if k == fiveOfAKind {
+		return hand
+	}
+	if k == fourOfAKind && strings.Count(hand, "J") == 1 {
+		for _, v := range hand {
+			if string(v) != "J" {
+				return strings.Replace(hand, "J", string(v), 1)
+			}
+		}
+	}
+	if k == threeOfAKind && strings.Count(hand, "J") >= 1 {
+		for _, v := range hand {
+			if string(v) != "J" && strings.Count(hand, string(v)) == 3 {
+				return strings.Replace(hand, "J", string(v), strings.Count(hand, "J"))
+			}
+		}
+	}
+	if k == twoPair && strings.Count(hand, "J") >= 1 {
+		for _, v := range hand {
+			if strings.Count(hand, "J") == 2 {
+				for _, v := range hand {
+					if string(v) != "J" && strings.Count(hand, string(v)) == 2 {
+						return strings.Replace(hand, "J", string(v), strings.Count(hand, "J"))
+					}
+				}
+			}
+			if string(v) != "J" && strings.Count(hand, string(v)) == 2 {
+				strongest := getStrongest(hand)
+				return strings.Replace(hand, "J", strongest, -1)
+			}
+		}
+	}
+	if k == onePair && strings.Count(hand, "J") >= 1 {
+		if strings.Count(hand, "J") == 2 {
+			fmt.Println()
+			for _, v := range hand {
+				if string(v) != "J" {
+					return strings.Replace(hand, "J", string(v), 1)
+				}
+			}
+		}
+		moreOf := ""
+		for _, c := range hand {
+			if strings.Count(hand, string(c)) == 2 {
+				moreOf = string(c)
+				fmt.Printf("more of %s\n", moreOf)
+				break
+			}
+		}
+		return hand
+	}
+	return hand
+}
+
+func getStrongest(s string) string {
+	m := getMap(false)
+	first := ""
+	second := ""
+
+	for _, v := range s {
+		if string(v) != "J" && strings.Count(s, string(v)) == 2 {
+			if first == "" && string(v) != first {
+				first = string(v)
+			}
+			if first != "" && string(v) != first {
+				second = string(v)
+				break
+			}
+		}
+	}
+
+	if m[first] > m[second] {
+		return first
+	} else {
+		return second
+	}
 }
 
 type ByGame []Game
@@ -44,6 +149,7 @@ type ByGame []Game
 func (g ByGame) Len() int {
 	return len(g)
 }
+
 func (g ByGame) Less(i, j int) bool {
 	if g[i].Kind == g[j].Kind {
 		for idx := 0; idx < len(g[i].HandInt); idx++ {
@@ -61,22 +167,20 @@ func (g ByGame) Swap(i, j int) {
 	g[i], g[j] = g[j], g[i]
 }
 
-func handToIntSlice(hand string) []int {
-	m := map[string]int{
-		"A": 14,
-		"K": 13,
-		"Q": 12,
-		"J": 11,
-		"T": 10,
-		"9": 9,
-		"8": 8,
-		"7": 7,
-		"6": 6,
-		"5": 5,
-		"4": 4,
-		"3": 3,
-		"2": 2,
+func getMap(specialJoker bool) map[string]int {
+	m := make(map[string]int)
+	s := "23456789TJQKA"
+	if specialJoker {
+		s = "J23456789TQK"
 	}
+	for i := 0; i < len(s); i++ {
+		m[string(s[i])] = i + 2
+	}
+	return m
+}
+
+func handToIntSlice(hand string, specialJoker bool) []int {
+	m := getMap(specialJoker)
 
 	var res []int
 	for _, v := range hand {
@@ -85,20 +189,15 @@ func handToIntSlice(hand string) []int {
 	return res
 }
 
-func getGames(s string) []Game {
+func getGames(s string, specialJoker bool) []Game {
 	lines := strings.Split(s, "\n")
 	var games []Game
 	for _, line := range lines {
 		g := strings.Split(line, " ")
 		hand := g[0]
 		bid, _ := strconv.Atoi(g[1])
-		kind := getKind(hand)
-		games = append(games, Game{
-			Hand:    hand,
-			Bid:     bid,
-			Kind:    kind,
-			HandInt: handToIntSlice(hand),
-		})
+		game := NewGame(bid, hand, specialJoker)
+		games = append(games, game)
 	}
 
 	return games

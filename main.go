@@ -27,4 +27,5 @@ func main() {
 
 	// Day Seven
 	daySevenPartOne()
+	daySevenPartTwo()
 }
